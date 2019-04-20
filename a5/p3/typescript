@@ -1,0 +1,1758 @@
+Script started on Fri 05 Apr 2019 09:00:38 PM MDT
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> ls -al
+total 100
+drwxr-xr-x 2 msmit474 students 4096 Apr  5 21:00 [0m[01;34m.[0m
+drwxr-xr-x 5 msmit474 students 4096 Apr  5 20:52 [01;34m..[0m
+-rw-r--r-- 1 msmit474 students  358 Apr  5 20:44 EquTriangle.cpp
+-rw-r--r-- 1 msmit474 students  404 Apr  5 20:44 EquTriangle.h
+-rw-r--r-- 1 msmit474 students  127 Apr  5 20:42 globals.h
+-rw-r--r-- 1 msmit474 students 2683 Apr  5 20:42 Grid.cpp
+-rw-r--r-- 1 msmit474 students  408 Apr  5 20:42 Grid.h
+-rw-r--r-- 1 msmit474 students 3937 Apr  5 20:42 ioutil.cpp
+-rw-r--r-- 1 msmit474 students 4254 Apr  5 20:42 ioutil.h
+-rw-r--r-- 1 msmit474 students  763 Apr  5 20:44 IsoTriangle.cpp
+-rw-r--r-- 1 msmit474 students  439 Apr  5 20:44 IsoTriangle.h
+-rw-r--r-- 1 msmit474 students 7502 Apr  5 20:42 main.cpp
+-rw-r--r-- 1 msmit474 students 2551 Apr  5 20:51 makefile
+-rw-r--r-- 1 msmit474 students 2500 Apr  5 20:41 makefile~
+-rw-r--r-- 1 msmit474 students  749 Apr  5 20:43 Rectangle.cpp
+-rw-r--r-- 1 msmit474 students  423 Apr  5 20:43 Rectangle.h
+-rw-r--r-- 1 msmit474 students 8014 Apr  5 20:59 Shape_Collection.cpp
+-rw-r--r-- 1 msmit474 students 3271 Apr  5 20:59 Shape_Collection.h
+-rw-r--r-- 1 msmit474 students 2454 Apr  5 20:43 Shape.cpp
+-rw-r--r-- 1 msmit474 students  593 Apr  5 20:43 Shape.h
+-rw-r--r-- 1 msmit474 students  348 Apr  5 20:43 Square.cpp
+-rw-r--r-- 1 msmit474 students  375 Apr  5 20:43 Square.h
+-rw-r--r-- 1 msmit474 students    0 Apr  5 21:00 typescript
+[m[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat makefile
+#  Name: Matthew Smith
+#  MRU E-mail:  msmit474@mtroyal.ca
+#  Course:      COMP 1633-001
+#  Assignment:  5 part 3
+#  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+#  Instructor:  Paul Pospisil
+#
+#  Source File: main.cpp
+
+TARGET=Paint
+TESTG=test_Grid
+TESTS=test_Shape
+TESTSC=test_Shape_Collection
+MODULES=Grid.o Shape.o Square.o Rectangle.o Shape_Collection.o IsoTriangle.o EquTriangle.o ioutil.o main.o
+GTESTMODULES=test_Grid.o Grid.o 
+STESTMODULES=test_Shape.o Shape.o Grid.o
+SCTESTMODULES=test_Shape_Collection.o Shape_Collection.o Shape.o Grid.o
+CPPFLAGS=-ansi -pedantic-errors -Wall -Wconversion
+GCOV_COMP=-fprofile-arcs -ftest-coverage
+GCOV_LINK=-lgcov --coverage
+GTFLAGS=-lgtest -lpthread -lgtest_main
+
+
+TESTG: clean coveredGrid test_Grid.o
+	g++ $(GCOV_LINK) $(GTFLAGS) $(GTESTMODULES) -g -o $(TESTG)
+	$(TESTG)
+	gcov Grid.cpp 2> /dev/null | grep -A 1 Grid.cpp
+
+TESTS: clean coveredShape test_Shape.o Grid.o
+	g++ $(GCOV_LINK) $(GTFLAGS) $(STESTMODULES) -g -o $(TESTS)
+	$(TESTS)
+	gcov Shape.cpp 2> /dev/null | grep -A 1 Shape.cpp
+
+TESTSC: clean coveredShape_Collection test_Shape_Collection.o Shape.o Grid.o
+	g++ $(GCOV_LINK) $(GTFLAGS) $(SCTESTMODULES) -g -o $(TESTSC)
+	$(TESTSC)
+	gcov Shape_Collection.cpp 2> /dev/null | grep -A 1 Shape_Collection.cpp
+
+MAIN: clean $(MODULES)
+	g++ $(GCOV_COMP) $(CPPFLAGS) $(MODULES) -g -o $(TARGET)
+#	$(TARGET)
+
+clean:
+	/bin/rm -f *.o *.*~ *.g* $(TESTG) $(TESTS) $(TESTSC) $(TARGET)
+
+all: clean MAIN
+
+main.o: main.cpp
+	g++ $(CPPFLAGS) -g -c main.cpp
+
+test_Grid.o: test_Grid.cpp Grid.h
+	g++ $(CPPFLAGS) $(GTFLAGS) -c test_Grid.cpp
+
+Grid.o: Grid.cpp Grid.h globals.h
+	g++ $(CPPFLAGS) -g -c Grid.cpp
+
+coveredGrid: Grid.cpp Grid.h
+	g++ $(CPPFLAGS) $(GTFLAGS) $(GCOV_COMP) -g -c Grid.cpp
+
+test_Shape.o: test_Shape.cpp
+	g++ $(CPPFLAGS) $(GTFLAGS) -g -c test_Shape.cpp
+
+Shape.o: Shape.cpp
+	g++ $(CPPFLAGS) -g -c Shape.cpp
+
+coveredShape: Shape.cpp Shape.h
+	g++ $(CPPFLAGS) $(GTFLAGS) $(GCOV_COMP) -g -c Shape.cpp
+
+test_Shape_Collection.o: test_Shape_Collection.cpp
+	g++ $(CPPFLAGS) $(GTFLAGS) -g -c test_Shape_Collection.cpp
+
+Shape_Collection.o: Shape_Collection.cpp Shape.h
+	g++ $(CPPFLAGS) -g -c Shape_Collection.cpp
+
+coveredShape_Collection: Shape_Collection.cpp Shape_Collection.h
+	g++ $(CPPFLAGS) $(GTFLAGS) $(GCOV_COMP) -g -c Shape_Collection.cpp
+
+Rectangle.o: Rectangle.cpp
+	g++ $(CPPFLAGS) -g -c Rectangle.cpp
+
+Square.o: Square.cpp
+	g++ $(CPPFLAGS) -g -c Square.cpp
+
+IsoTriangle.o: IsoTriangle.cpp
+	g++ $(CPPFLAGS) -g -c IsoTriangle.cpp
+
+EquTriangle.o: EquTriangle.cpp
+	g++ $(CPPFLAGS) -g -c EquTriangle.cpp
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat main.cpp
+#include <iostream>
+#include <fstream>
+#include <string>
+using namespace std;
+
+#include "Grid.h"
+#include "Shape.h"
+#include "Rectangle.h"
+#include "Square.h"
+#include "IsoTriangle.h"
+#include "EquTriangle.h"
+#include "Shape_Collection.h"
+#include "ioutil.h"
+
+#define QUIT 'q'
+#define ADD 'a'
+#define DELETE 'd'
+#define MOVE 'm'
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 3
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: main.cpp
+
+ */
+
+
+void show_menu();
+
+string getShapeName();
+void getUpperLeft (int& xtop, int& ytop);
+int getWidth();
+int getHeight();
+char getShapeType();
+
+void doAdd (Shape_Collection& shapes);
+void doDelete (Shape_Collection& shapes);
+void doMove (Shape_Collection& shapes);
+bool doQuit ();
+void eof_message();
+
+int main()
+{
+    Shape_Collection myShapes;
+    char choice;
+    char choiceStr[2];
+    bool done = false;
+    bool eof = false;
+
+    do
+    {
+	myShapes.write_names (cout);
+	cout << endl;
+	myShapes.draw_shapes(cout);
+	show_menu();
+	readString("Please enter choice: ", choiceStr, 1, 1, eof);
+	if (eof)
+	{
+	    choice = QUIT;
+	}
+	else
+	{
+	    choice = choiceStr[0];
+	}
+	switch (choice)
+	{
+	case ADD:    doAdd (myShapes);
+	    break;
+	case DELETE: doDelete (myShapes);
+	    break;
+	case MOVE:   doMove (myShapes);
+	    break;
+	case QUIT:   done = doQuit ();
+	    break;
+	default:     cout << choice << " is unknown command" << endl;
+	    break;
+	}
+    }
+    while (!done);
+
+    return 0;
+}
+
+
+void show_menu()
+{
+    cout << "Options:  a(dd shape)" << endl;
+    cout << "          d(elete) shape" << endl;
+    cout << "          m(ove) shape" << endl;
+    cout << "          q(uit) paint program" << endl;
+    return;
+}
+
+void getUpperLeft (int& xtop, int& ytop)
+{
+    bool eof;
+
+    do
+    {
+	xtop = readInt ("Enter x coordinate for upper left corner of bounding box: ", eof);
+	if (eof)
+	{
+	    eof_message();
+	}
+    } while (eof);
+
+    do
+    {
+	ytop = readInt ("Enter y coordinate for upper left corner of bounding box: ", eof);
+	if (eof)
+	{
+	    eof_message();
+	}
+    } while (eof);
+    
+    return;
+}
+
+int getWidth ()
+{
+    int width = 1;
+    bool eof;
+
+    // enter code to read and return a valid shape width
+    width = readInt("Enter width > 0: ", eof);
+    while(width <= 0 || eof)
+    {
+	width = readInt("Enter width > 0: ", eof);
+    }
+
+    return width;
+}
+
+int getHeight ()
+{
+    int height = 1;
+    bool eof;
+
+    // enter code to read and return a valid shape height
+    height = readInt("Enter height > 0: ", eof);
+    while(height <= 0 || eof)
+    {
+	height = readInt("Enter height > 0: ", eof);
+    }
+
+    return height;
+}
+
+char getShapeType ()
+{
+    char shapeType = 'r';
+    bool eof = false,
+	success = false;
+    char choice[1];
+
+    // enter code to read and return a valid shape type
+    while(!success || eof)
+    {
+	readString("Enter type of shape(r, s, i, e): ", choice, 1, 1, eof);
+   
+	if(choice[0] != 'r' && choice[0] != 's' && 
+	   choice[0] != 'i' && choice[0] != 'e')
+	{
+	    cout << "Invalid Shape choice; not r,s,i or e." << endl;	    
+	}
+	else
+	    success = true;
+    }	
+    shapeType = choice[0];
+
+    return shapeType;
+}
+
+string getShapeName()
+{
+    string result;
+
+    cout << "Please enter shape name (no blanks): ";
+    cin >> result;
+    cin.ignore(256, '\n');   // eliminate any trailing input & the newline
+
+    return result;
+}
+
+void doMove (Shape_Collection& myShapes)
+{
+
+    // stub
+    // enter code to move a shape
+    //
+    // get the name of the shape
+    // if the name does not exist in the shape collection
+    // then
+    //    report and terminate
+    // else
+    //    get new upper left coordinates
+    //    "ask the shape to do the move"
+    string name;
+    bool eof;
+    Shape* shapePtr;
+    int newLeft, newUpper;
+
+//    readString("Enter the name of the shape: ", name, 12, 1, eof);
+//    while(eof)
+//    {
+//	readString("Enter the name of the shape: ", name, 12, 1, eof);
+//    }
+
+    name = getShapeName();
+
+    shapePtr = myShapes.lookup(name);
+
+    if(shapePtr == NULL)
+	cout << "Shape not found." << endl;
+    else
+    {
+	newLeft = readInt("Enter new left position: ", eof);
+	while(eof)
+	{
+	    newLeft = readInt("Enter new left position: ", eof);
+	}
+
+	newUpper = readInt("Enter new upper position: ", eof);
+	while(eof)
+	{
+	    newUpper = readInt("Enter new upper position: ", eof);
+	}
+
+	// move shape
+	shapePtr->move(newLeft,newUpper);
+
+    }
+
+    return;
+}
+
+void doDelete (Shape_Collection& myShapes)
+{
+
+    // stub
+    // enter code to delete a shape
+    //
+    // get the name of the shape
+    // if the name does not exist in the shape collection
+    // then
+    //    report and terminate
+    // else
+    //    "ask the shape collection to do the delete"
+    string name;
+    Shape* shapePtr;
+
+//    readString("Enter the name of the shape: ", name, 12, 1, eof);
+//    while(eof)
+//    {
+//	readString("Enter the name of the shape: ", name, 12, 1, eof);
+//    }
+
+    name = getShapeName();
+
+    shapePtr = myShapes.lookup(name);
+
+    if(shapePtr == NULL)
+	cout << "Shape was not found." << endl;
+    else
+	myShapes.remove(name);
+
+    return;
+}
+
+void doAdd (Shape_Collection& myShapes)
+{
+
+    // stub
+    // enter code to add a shape
+    //
+    // get the name of the new shape
+    // if the name exists in the shape collection
+    // then
+    //    report and terminate
+    // else
+    //    get the type of shape
+    //    get the required positional and size information for the shape
+    //    "ask the shape collection to do the add"
+
+    string name;
+//    char name[13];
+    char typeOfShape;
+    bool eof = false;
+    Shape* shapePtr = NULL;
+    int left, upper, width, height;
+
+/*    readString("Enter the name of the shape: ", name, 12, 1, eof);
+      while(eof)
+      {
+      readString("Enter the name of the shape: ", name, 12, 1, eof);
+      }
+*/
+
+    name = getShapeName();
+
+    shapePtr = myShapes.lookup(name);
+
+    if(shapePtr != NULL)       // Name was found on list
+    {
+	cout << "Name is already used; cannot add." << endl;
+    }
+    else
+    {
+	typeOfShape = getShapeType();
+	
+// read position
+	eof = false;
+
+	left = readInt("Enter left position: ", eof);
+	while(eof)
+	{
+	    left = readInt("Enter left position: ", eof);
+	}
+	upper = readInt("Enter upper position: ", eof);
+	while(eof)
+	{
+	    upper = readInt("Enter upper position: ", eof);
+	}
+
+
+	if(typeOfShape == 'r')
+	{
+	    // Add rectangle
+	    width = getWidth();
+	    height = getHeight();
+
+	    shapePtr = new Rectangle(left, upper, width, height);
+	}
+	else if(typeOfShape == 's')
+	{
+	    // add square 
+	    width = getWidth();
+
+	    shapePtr = new Square(left, upper, width);
+	}
+	else if(typeOfShape == 'i')
+	{
+	    // add iso triangle
+	    width = getWidth();
+	    height = getHeight();
+
+	    shapePtr = new IsoTriangle(left, upper, width, height);
+	}
+	else if(typeOfShape == 'e')
+	{
+	    // add equ triangle
+	    width = getWidth();
+
+	    shapePtr = new EquTriangle(left, upper, width);
+	}
+		
+
+// add shape to list
+	myShapes.add(shapePtr, name);
+	
+
+	
+    }
+
+    return;
+}
+
+bool doQuit ()
+{
+    bool done;
+    bool eof;
+
+    done = readBool ("Are you sure you are done painting? (y/n) ", eof);
+    if (done || eof)
+	cout << "I've had fun painting with you! Bye..." << endl;
+    else
+	cout << "Back we go..." << endl;
+
+    return done;
+}
+
+void eof_message()
+{
+    cout << "typing CTRL-d is not acceptable here - "
+	 << "if you wish to terminate the program type CTRL-c" << endl;
+
+    return;
+}
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat Shape_Collection.h
+#ifndef SHAPE_COLLECTION
+#define SHAPE_COLLECTION
+
+#include <string>
+
+using namespace std;
+
+#include "Shape.h"
+
+/*********************************************************************
+ *
+ *  CLASS: Shape_Collection
+ *
+ *  PURPOSE: A collection of pointers to shape objects.
+ *           The order of elements is irrelevant.
+ * 
+ *  Each shape is associated with a name used for lookup and removal.
+ *  The shapes are assumed to have been dynamically allocated from the 
+ *  heap by the client.
+ *  The collection takes custody of these shapes, and therefore it will 
+ *  deallocate them as necessary.
+ *
+ *  ASSUMPTIONS: 
+ *  1. The client never adds duplicate shape pointers
+ *  2. The client never adds a shape under an already-existing name
+ *
+ *********************************************************************
+ *
+ *  PUBLIC METHODS:
+ *
+ *********************************************************************
+ *
+ *  Shape_Collection
+ *         PURPOSE: initializes an empty collection
+ *
+ *********************************************************************
+ *
+ *  ~Shape_Collection
+ *         PURPOSE: deallocates all shape objects
+ *
+ *********************************************************************
+ *
+ *  add
+ *         PURPOSE: adds the given shape pointer to the collection,
+ *                  associating it with the given name.
+ *
+ *         INPUT: shape - a pointer to a dynamically allocated shape
+ *                name  - the name to associated with the shape
+ *
+ *********************************************************************
+ *
+ *  remove
+ *
+ *         PURPOSE: removes the named shape from the collection, if it
+ *                  exists.  The shape object is deallocated.
+ *
+ *         INPUT: name - the name of the shape to remove
+ *
+ *********************************************************************
+ *
+ *  lookup
+ *
+ *         PURPOSE: retrieves the pointer to the named shape
+ *
+ *         INPUT: name - the name of the shape to look up
+ *
+ *         RETURNS: the pointer, or NULL if no such shape
+ *
+ *********************************************************************
+ *
+ *  draw_shapes
+ *
+ *         PURPOSE: renders all shapes in the collection
+ *
+ *         INPUT: out - the output stream to use
+ *
+ *         OUTUPT: out - the output stream has been written to
+ *
+ *********************************************************************
+ *
+ *  write_names
+ *
+ *         PURPOSE: writes the list of shape names in the collection
+ *
+ *         INPUT: out - the output stream to use
+ *
+ *         OUTPUT: out - the output stream has been written to
+ *
+ *********************************************************************/
+
+
+class Shape_Collection
+{
+public:
+   Shape_Collection ();
+   ~Shape_Collection ();
+
+   void add (Shape* shape, string name);
+   void remove (string name);
+
+   Shape* lookup (string name) const;
+
+   void draw_shapes (ostream& out) const;
+   void write_names (ostream& out) const;
+
+private:
+   struct Node
+   {
+      Node* next;
+      Node* prev;
+
+      Shape* shape;
+      string name;
+   };
+
+   Shape_Collection (const Shape_Collection& orig);
+   Shape_Collection& operator= (const Shape_Collection& rhs);
+
+   void remove_all ();
+   Node* lookup_node (string name) const;
+   Node* head;
+};
+
+
+#endif
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat Shape_Collection.cpp
+#include "Shape_Collection.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 2
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: Shape_Collection.cpp
+
+ */
+/*********************************************************************
+ *
+ *  CLASS: Shape_Collection
+ *
+ *  PURPOSE: A collection of pointers to shape objects.
+ *           The order of elements is irrelevant.
+ *
+ *  PRIVATE DATA MEMBERS:
+ *
+ *  head - a pointer to the head node of a doubly linked list, NULL if
+ *         the list is empty
+ *
+ *  NOTES:
+ *  Each node contains:
+ *
+ *       - a pointer to the "next" node, NULL for tail node
+ *
+ *       - a pointer to the "prev" (previous) node, NULL for head node
+ *
+ *       - shape: a pointer to a dynamically allocated shape object
+ *
+ *       - name: the name associated with that shape
+ *
+ *  The list is doubly linked to simplify the implementation of "remove".
+ *  The "lookup_node" helper function returns a pointer to a node.  
+ *  Therefore, "remove" can simply take this node, unlink it from its 
+ *  "prev" and "next" neighbours (if any), and then deallocate.
+ *
+ *********************************************************************/
+
+/*********************************************************************
+ *
+ *  FUNCTION: Shape_Collection
+ *
+ *  PURPOSE: initializes an empty collection.
+ *
+ *********************************************************************/
+
+Shape_Collection :: Shape_Collection () : head (NULL)
+{
+}
+
+
+/*********************************************************************
+ *
+ *  FUNCTION: ~Shape_Collection
+ *
+ *  PURPOSE: deallocates all dynamically allocated
+ *           memory by removing all nodes.
+ *
+ *********************************************************************/
+
+Shape_Collection :: ~Shape_Collection ()
+{
+   while (head != NULL)
+      remove(head->name);
+}
+
+
+/*********************************************************************
+ *
+ *  FUNCTION: add
+ *
+ *  PURPOSE: adds the given shape pointer to the collection,
+ *           associating it with the given name.
+ *
+ *  METHOD: - allocate the node
+ *          - link it in at the front of the list
+ *          - store the shape pointer and name inside
+ *
+ *  INPUT: shape - a pointer to a dynamically allocated shape
+ *         name  - the name to associated with the shape
+ *
+ *********************************************************************/
+
+void Shape_Collection :: add (Shape* shape, string name)
+{
+   Node* new_node = new Node;
+
+   new_node->next = head;
+   new_node->prev = NULL;
+   new_node->shape = shape;
+   new_node->name = name;
+
+   if (head != NULL)
+     head->prev = new_node;
+
+   head = new_node;
+}
+
+/*********************************************************************
+ *
+ *  FUNCTION: remove
+ *
+ *  PURPOSE: removes the named shape from the collection, if it exists.
+ *           The shape object is deallocated.
+ *
+ *  METHOD: - look up the node
+ *          - if it exists:
+ *               - if it has a successor, set successor's 
+ *                 predecessor to by-pass this node
+ *               - if it has a predecessor, set predecessor's
+ *                 successor to by-pass this node
+ *               - if it has no predecessor (i.e. it was at the
+ *                 front of the list) update the head pointer
+ *               - deallocate the shape object
+ *               - deallocate the node
+ *
+ *  INPUT: name - the name of the shape to remove
+ *
+ *********************************************************************/
+
+void Shape_Collection :: remove (string name)
+{
+   Node* gone = lookup_node (name);
+
+   if (gone != NULL)
+   {
+      if (gone->next != NULL)
+         gone->next->prev = gone->prev;
+   
+      if (gone->prev != NULL)
+         gone->prev->next = gone->next;
+      else
+         head = gone->next;
+
+      delete gone->shape;
+      delete gone;
+   }
+}
+
+
+/*********************************************************************
+ *
+ *  FUNCTION: lookup
+ *
+ *  PURPOSE: retrieves the pointer to the named shape
+ *
+ *  INPUT: name - the name of the shape to look up
+ *
+ *  RETURNS: the pointer, or NULL if no such shape
+ *
+ *********************************************************************/
+
+Shape* Shape_Collection :: lookup (string name) const
+{
+   Shape* found = NULL;
+   Node* gotit = lookup_node(name);
+
+   if (gotit != NULL)
+      found = gotit->shape;
+
+   return found;
+}
+
+/*********************************************************************
+ *
+ *  FUNCTION: draw_shapes
+ *
+ *  PURPOSE: draws all the shapes in the collection to the screen
+ *           
+ *
+ *  METHOD: - instantiates a grid object
+ *          - create a temporary pointer and make equal to head
+ *          - goes through the list starting at the head:
+ *               - draws the shape at the current node to the grid
+ *          - write the grid to the output stream
+ *          
+ *  INPUT: out - the output stream that will be written to
+ *
+ *  OUTPUT: out - the output stream that has been written to
+ *
+ *********************************************************************/
+
+void Shape_Collection :: draw_shapes (ostream& out) const
+{
+    Grid grid;
+    Node* temp = head;
+
+    while(temp != NULL)
+    {
+	temp->shape->draw(grid);
+
+	temp = temp->next;
+    }
+
+    grid.write(out);             
+    
+
+}
+
+/*********************************************************************
+ *
+ *  FUNCTION: draw_shapes
+ *
+ *  PURPOSE: draws all the shapes in the collection to the screen
+ *           
+ *
+ *  METHOD: - create a temporary pointer and make equal to head
+ *          - goes through the list starting at the head:
+ *               - write the name of the shape at the current node to the stream
+ *               - if the list has more nodes, prints a comma
+ *          
+ *  INPUT: out - the output stream that will be written to
+ *
+ *  OUTPUT: out - the output stream that has been written to
+ *
+ *********************************************************************/
+
+void Shape_Collection :: write_names (ostream& out) const
+{
+    Node* temp = head;
+
+    while(temp != NULL)
+    {
+                                       // Might need square brackets
+	out << temp->name;
+
+	if(temp->next != NULL)
+	{
+	    out << ", ";
+	}
+
+	temp = temp->next;
+    }
+
+}
+
+/*********************************************************************
+
+ *********************************************************************/
+
+Shape_Collection :: Shape_Collection (const Shape_Collection& orig)
+{
+  // DUMMY IMPLEMENTATION - NOT CALLABLE FROM CLIENT
+}
+
+
+/*********************************************************************
+
+ *********************************************************************/
+
+Shape_Collection& Shape_Collection :: operator = (const Shape_Collection& rhs)
+{
+  // DUMMY IMPLEMENTATION - NOT CALLABLE FROM CLIENT
+  return *this;
+}
+
+
+/*********************************************************************
+ *
+ *  FUNCTION: lookup_node
+ *
+ *  PURPOSE: looks up the node with the given name
+ *
+ *  METHOD: sequential search algorithm
+ *
+ *  INPUT: name - the name of the shape to look up
+ *
+ *  RETURNS: a pointer to the node containing the named shape, NULL
+ *           if not found
+ *
+ *  REMARKS:
+ *      Node is defined in the private data area of the Shape_Collection
+ *      class. As a consequence, when it is returned directly, its 
+ *      "location" must be resolved by using the scope operator as a
+ *      prefix
+ *      i.e.  return type of Shape_Collection::Node*
+ *            says "you can find this definition in
+ *            the Shape_Collection class"
+ *********************************************************************/
+
+Shape_Collection::Node* Shape_Collection :: lookup_node (string name) const
+{
+   bool found = false;
+   Node* curr = head;
+
+   while (!found && curr != NULL)
+   {
+      if (curr->name == name)            // can use with C++ string class
+         found = true;
+      else
+         curr = curr->next;
+   }
+   return curr;
+}
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat Shape.h
+#ifndef SHAPE
+#define SHAPE
+
+#include "Grid.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 2
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: Shape.h
+
+ */
+
+class Shape
+{
+public:
+    Shape(int lft, int up, int rght, int low);
+
+    void move(int new_left, int new_upper);
+
+    virtual void draw(Grid& aGrid) = 0;
+
+protected:
+    void get_bounding_box(int& lft, int& up, int& rght, int& low) const;
+
+private:
+    int left;
+    int upper;
+    int right;
+    int lower;
+
+};
+
+#endif
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat Shape.cpp
+#include "Shape.h"
+#include "Grid.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 2
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: Shape.cpp
+
+ */
+/*********************************************************************
+ *
+ *  CLASS: Shape
+ *
+ *  PURPOSE: A group of positions for a shape on a grid
+ *
+ *
+ *  PRIVATE DATA MEMBERS:
+ *
+ *  left - The leftmost position of the shape
+ *  
+ *  upper - The upmost position of the shape
+ *
+ *  right - The rightmost position of the shape
+ *
+ *  lower - The lowest position of the shape
+ *
+ *********************************************************************/
+
+/*********************************************************************
+ *
+ *  FUNCTION: Shape
+ *
+ *  PURPOSE: initializes a shape to the specified size.
+ *
+ *  INPUT: lft - the left position of the shape
+ *         up - the upper position of the shape
+ *         width - the width of the shape
+ *
+ *********************************************************************/
+
+Shape :: Shape(int lft, int up, int rght, int low)
+{
+    left = lft;
+    upper = up;
+    right = rght;
+    lower = low;
+}
+
+/*********************************************************************
+ *
+ *  FUNCTION: move
+ *
+ *  PURPOSE: moves the shape to a new position on the grid
+ *
+ *  METHOD: - calculates the width of the shape 
+ *          - assigns the new positions
+ *
+ *  INPUT: new_left - the new leftmost position of the shape
+ *         new_upper - the new upper position of the shape
+ *
+ *********************************************************************/
+
+void Shape :: move(int new_left, int new_upper)
+{
+    int width;
+
+    width = right - left;
+
+    left = new_left;
+    upper = new_upper;
+    right = left + width;
+    lower = upper + width;
+
+}
+
+/*********************************************************************
+ *
+ *  FUNCTION: get_bounding_box
+ *
+ *  PURPOSE: gets the postion of the shape on the Grid
+ *
+ *  METHOD: - assigns the passed vales to the corresponding data members 
+ *          
+ *  INPUT:  - integers that will be assigned to the position of the shape
+ *
+ *  RETURNS: - the position values of the shape
+ *
+ *********************************************************************/
+
+void Shape :: get_bounding_box(int& lft, int& up, int& rght, int& low) const
+{
+    lft = left;
+    up = upper;
+    rght = right;
+    low = lower;
+}
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat re[K[KRectangle.h
+#ifndef RECTANGLE
+#define RECTANGLE
+
+#include "Shape.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 3
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: Rectangle.h
+
+ */
+
+class Rectangle : public Shape
+{
+public:
+
+    Rectangle(int lft, int up, int width, int height);
+
+    void draw(Grid& aGrid);
+
+};
+
+#endif
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat Rectangle.cpp
+#include "Rectangle.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 3
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: Rectangle.cpp
+
+ */
+
+Rectangle :: Rectangle(int lft, int up, int width, int height) :
+    Shape(lft, up, lft + width, up + height)
+{
+}
+
+void Rectangle :: draw(Grid& aGrid)
+{
+    int left, upper, right, lower;
+
+    get_bounding_box(left, upper, right, lower);
+
+    aGrid.plot_line(left,upper, right,upper);     // Top line
+    aGrid.plot_line(left,upper, left,lower);      // Left line
+    aGrid.plot_line(right,upper, right,lower);    // Right line
+    aGrid.plot_line(left,lower, right,lower);     // Bottom line
+}
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat Square.h
+#ifndef SQUARE
+#define SQUARE
+
+#include "Rectangle.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 3
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: Square.h
+
+ */
+
+class Square : public Rectangle
+{
+public:
+
+    Square(int lft, int up, int width);
+
+};
+
+#endif
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat Square.cpp
+#include "Square.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 3
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: Square.cpp
+
+ */
+
+Square :: Square(int lft, int up, int width) :
+    Rectangle(lft, up, lft + width, up + width)
+{
+}
+
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat IsoTriangle.h
+#ifndef ISOTRIANGLE
+#define ISOTRIANGLE
+
+#include "Shape.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 3
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: IsoTriangle.cpp
+
+ */
+
+class IsoTriangle : public Shape
+{
+public:
+
+    IsoTriangle(int lft, int up, int baseWidth, int height);
+
+    void draw(Grid& aGrid);
+
+};
+
+#endif
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat IsoTriangle.cpp
+#include "IsoTriangle.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 3
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: IsoTriangle.cpp
+
+ */
+
+IsoTriangle :: IsoTriangle(int lft, int up, int baseWidth, int height) :
+    Shape(lft, up, lft + baseWidth, up + height)
+{
+}
+
+void IsoTriangle :: draw(Grid& aGrid)
+{
+    int left, upper, right, lower, width;
+
+    get_bounding_box(left, upper, right, lower);
+    width = right - left;
+
+    aGrid.plot_line(left + (width/2),upper, left,lower);  // Left line
+    aGrid.plot_line(left + (width/2),upper, right,lower); // Right line 
+    aGrid.plot_line(left,lower, right,lower);             // Bottom line
+}
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat EquTriangle.h
+#ifndef EQUTRIANGLE
+#define EQUTRIANGLE
+
+#include "IsoTriangle.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 3
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: EquTriangle.h
+
+ */
+
+class EquTriangle : public IsoTriangle
+{
+public: 
+
+    EquTriangle(int lft, int up, int width);
+};
+
+#endif
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> cat EquTriangle.cpp
+#include "EquTriangle.h"
+
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  5 part 3
+  Due Date:    Friday, April 5, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: EquTriangle.cpp
+
+ */
+
+EquTriangle :: EquTriangle(int lft, int up, int width) :
+    IsoTriangle(lft, up, width, width)
+{
+}
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> make all
+/bin/rm -f *.o *.*~ *.g* test_Grid test_Shape test_Shape_Collection Paint
+g++ -ansi -pedantic-errors -Wall -Wconversion -g -c Grid.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -g -c Shape.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -g -c Square.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -g -c Rectangle.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -g -c Shape_Collection.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -g -c IsoTriangle.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -g -c EquTriangle.cpp
+g++  -ansi -pedantic-errors -Wall -Wconversion  -c -o ioutil.o ioutil.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -g -c main.cpp
+g++ -fprofile-arcs -ftest-coverage -ansi -pedantic-errors -Wall -Wconversion Grid.o Shape.o Square.o Rectangle.o Shape_Collection.o IsoTriangle.o EquTriangle.o ioutil.o main.o -g -o Paint
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> Paint
+
+--------------------------------------------------
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: a
+Please enter shape name (no blanks): box
+Enter type of shape(r, s, i, e): s
+Enter left position: 0
+Enter upper position: 0
+Enter width > 0: 3
+box
+--------------------------------------------------
+****                                              
+*  *                                              
+*  *                                              
+****                                              
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: m
+Please enter shape name (no blanks): box
+Enter new left position: 80
+Enter new upper position: 22
+box
+--------------------------------------------------
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: a
+Please enter shape name (no blanks): rectangle
+Enter type of shape(r, s, i, e): r
+Enter left position: 0
+Enter upper position: 0
+Enter width > 0: 80
+Enter height > 0: 22
+rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: a
+Please enter shape name (no blanks): thin
+Enter type of shape(r, s, i, e): r
+Enter left position: 12
+Enter upper position: 5
+Enter width > 0: 1
+Enter height > 0: 4
+thin, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*           **                                    
+*           **                                    
+*           **                                    
+*           **                                    
+*           **                                    
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+*                                                 
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: a
+Please enter shape name (no blanks): isotri
+Enter type of shape(r, s, i, e): i
+Enter left position: 2
+Enter upper position: 2
+Enter width > 0: 7
+Enter height > 0: 18
+isotri, thin, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *     **                                    
+*   * *     **                                    
+*   * *     **                                    
+*   * *     **                                    
+*   *  *    **                                    
+*   *  *                                          
+*  *   *                                          
+*  *   *                                          
+*  *   *                                          
+*  *    *                                         
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: a
+Please enter shape name (no blanks): equtri
+Enter type of shape(r, s, i, e): 35
+INVALID - input string longer than allowed -- please try again.
+Enter type of shape(r, s, i, e): e
+Enter left position: 35
+Enter upper position: 8
+Enter width > 0: 8
+equtri, isotri, thin, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *     **                                    
+*   * *     **                                    
+*   * *     **                                    
+*   * *     **                         *          
+*   *  *    **                        * *         
+*   *  *                              * *         
+*  *   *                             *   *        
+*  *   *                             *   *        
+*  *   *                            *     *       
+*  *    *                           *     *       
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: m
+Please enter shape name (no blanks): equtri
+Enter new left position: 14
+Enter new upper position: 5
+equtri, isotri, thin, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *     **    *                               
+*   * *     **   * *                              
+*   * *     **   * *                              
+*   * *     **  *   *                             
+*   *  *    **  *   *                             
+*   *  *       *     *                            
+*  *   *       *     *                            
+*  *   *      *       *                           
+*  *   *      *********                           
+*  *    *                                         
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: d
+Please enter shape name (no blanks): thin
+equtri, isotri, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *           *                               
+*   * *          * *                              
+*   * *          * *                              
+*   * *         *   *                             
+*   *  *        *   *                             
+*   *  *       *     *                            
+*  *   *       *     *                            
+*  *   *      *       *                           
+*  *   *      *********                           
+*  *    *                                         
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: d
+Please enter shape name (no blanks): thin
+Shape was not found.
+equtri, isotri, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *           *                               
+*   * *          * *                              
+*   * *          * *                              
+*   * *         *   *                             
+*   *  *        *   *                             
+*   *  *       *     *                            
+*  *   *       *     *                            
+*  *   *      *       *                           
+*  *   *      *********                           
+*  *    *                                         
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: d
+Please enter shape name (no blanks): foo
+Shape was not found.
+equtri, isotri, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *           *                               
+*   * *          * *                              
+*   * *          * *                              
+*   * *         *   *                             
+*   *  *        *   *                             
+*   *  *       *     *                            
+*  *   *       *     *                            
+*  *   *      *       *                           
+*  *   *      *********                           
+*  *    *                                         
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: a
+Please enter shape name (no blanks): box
+Name is already used; cannot add.
+equtri, isotri, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *           *                               
+*   * *          * *                              
+*   * *          * *                              
+*   * *         *   *                             
+*   *  *        *   *                             
+*   *  *       *     *                            
+*  *   *       *     *                            
+*  *   *      *       *                           
+*  *   *      *********                           
+*  *    *                                         
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: a
+Please enter shape name (no blanks): screwy
+Enter type of shape(r, s, i, e): i
+Enter left position: 40
+Enter upper position: 5
+Enter width > 0: 3
+Enter height > 0: -2
+Enter height > 0: 10
+screwy, equtri, isotri, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *           *                      *        
+*   * *          * *                     *        
+*   * *          * *                     *        
+*   * *         *   *                    **       
+*   *  *        *   *                    **       
+*   *  *       *     *                  * *       
+*  *   *       *     *                  * *       
+*  *   *      *       *                 * *       
+*  *   *      *********                 *  *      
+*  *    *                               *  *      
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: a
+Please enter shape name (no blanks): nogood
+Enter type of shape(r, s, i, e): r
+Enter left position: 70
+Enter upper position: 15
+Enter width > 0: 0
+Enter width > 0: 5
+Enter height > 0: 3
+nogood, screwy, equtri, isotri, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *           *                      *        
+*   * *          * *                     *        
+*   * *          * *                     *        
+*   * *         *   *                    **       
+*   *  *        *   *                    **       
+*   *  *       *     *                  * *       
+*  *   *       *     *                  * *       
+*  *   *      *       *                 * *       
+*  *   *      *********                 *  *      
+*  *    *                               *  *      
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: xxx
+INVALID - input string longer than allowed -- please try again.
+Please enter choice: a
+Please enter shape name (no blanks): diamond
+Enter type of shape(r, s, i, e): d
+Invalid Shape choice; not r,s,i or e.
+Enter type of shape(r, s, i, e): s
+Enter left position: 100
+Enter upper position: 100
+Enter width > 0: 5
+diamond, nogood, screwy, equtri, isotri, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *           *                      *        
+*   * *          * *                     *        
+*   * *          * *                     *        
+*   * *         *   *                    **       
+*   *  *        *   *                    **       
+*   *  *       *     *                  * *       
+*  *   *       *     *                  * *       
+*  *   *      *       *                 * *       
+*  *   *      *********                 *  *      
+*  *    *                               *  *      
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: a
+Please enter shape name (no blanks): he llo
+Enter type of shape(r, s, i, e): s
+Enter left position: 10
+Enter upper position: 10
+Enter width > 0: 2
+he, diamond, nogood, screwy, equtri, isotri, rectangle, box
+--------------------------------------------------
+**************************************************
+*                                                 
+*    *                                            
+*    *                                            
+*    *                                            
+*   * *           *                      *        
+*   * *          * *                     *        
+*   * *          * *                     *        
+*   * *         *   *                    **       
+*   *  *        *   *                    **       
+*   *  *  *************                 * *       
+*  *   *  *    *     **                 * *       
+*  *   *  *   *       *                 * *       
+*  *   *  *   *********                 *  *      
+*  *    * *           *                 *  *      
+--------------------------------------------------
+Options:  a(dd shape)
+          d(elete) shape
+          m(ove) shape
+          q(uit) paint program
+Please enter choice: q
+Are you sure you are done painting? (y/n) y
+I've had fun painting with you! Bye...
+[msmit474@ins.mtroyal.ca ~/1633/assignments/asg5/p3> exit
+exit
+
+Script done on Fri 05 Apr 2019 09:16:46 PM MDT

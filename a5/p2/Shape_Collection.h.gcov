@@ -1,0 +1,130 @@
+        -:    0:Source:Shape_Collection.h
+        -:    0:Graph:Shape_Collection.gcno
+        -:    0:Data:Shape_Collection.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#ifndef SHAPE_COLLECTION
+        -:    2:#define SHAPE_COLLECTION
+        -:    3:
+        -:    4:#include <string>
+        -:    5:
+        -:    6:using namespace std;
+        -:    7:
+        -:    8:#include "Shape.h"
+        -:    9:
+        -:   10:/*********************************************************************
+        -:   11: *
+        -:   12: *  CLASS: Shape_Collection
+        -:   13: *
+        -:   14: *  PURPOSE: A collection of pointers to shape objects.
+        -:   15: *           The order of elements is irrelevant.
+        -:   16: * 
+        -:   17: *  Each shape is associated with a name used for lookup and removal.
+        -:   18: *  The shapes are assumed to have been dynamically allocated from the 
+        -:   19: *  heap by the client.
+        -:   20: *  The collection takes custody of these shapes, and therefore it will 
+        -:   21: *  deallocate them as necessary.
+        -:   22: *
+        -:   23: *  ASSUMPTIONS: 
+        -:   24: *  1. The client never adds duplicate shape pointers
+        -:   25: *  2. The client never adds a shape under an already-existing name
+        -:   26: *
+        -:   27: *********************************************************************
+        -:   28: *
+        -:   29: *  PUBLIC METHODS:
+        -:   30: *
+        -:   31: *********************************************************************
+        -:   32: *
+        -:   33: *  Shape_Collection
+        -:   34: *         PURPOSE: initializes an empty collection
+        -:   35: *
+        -:   36: *********************************************************************
+        -:   37: *
+        -:   38: *  ~Shape_Collection
+        -:   39: *         PURPOSE: deallocates all shape objects
+        -:   40: *
+        -:   41: *********************************************************************
+        -:   42: *
+        -:   43: *  add
+        -:   44: *         PURPOSE: adds the given shape pointer to the collection,
+        -:   45: *                  associating it with the given name.
+        -:   46: *
+        -:   47: *         INPUT: shape - a pointer to a dynamically allocated shape
+        -:   48: *                name  - the name to associated with the shape
+        -:   49: *
+        -:   50: *********************************************************************
+        -:   51: *
+        -:   52: *  remove
+        -:   53: *
+        -:   54: *         PURPOSE: removes the named shape from the collection, if it
+        -:   55: *                  exists.  The shape object is deallocated.
+        -:   56: *
+        -:   57: *         INPUT: name - the name of the shape to remove
+        -:   58: *
+        -:   59: *********************************************************************
+        -:   60: *
+        -:   61: *  lookup
+        -:   62: *
+        -:   63: *         PURPOSE: retrieves the pointer to the named shape
+        -:   64: *
+        -:   65: *         INPUT: name - the name of the shape to look up
+        -:   66: *
+        -:   67: *         RETURNS: the pointer, or NULL if no such shape
+        -:   68: *
+        -:   69: *********************************************************************
+        -:   70: *
+        -:   71: *  draw_shapes
+        -:   72: *
+        -:   73: *         PURPOSE: renders all shapes in the collection
+        -:   74: *
+        -:   75: *         INPUT: out - the output stream to use
+        -:   76: *
+        -:   77: *         OUTUPT: out - the output stream has been written to
+        -:   78: *
+        -:   79: *********************************************************************
+        -:   80: *
+        -:   81: *  write_names
+        -:   82: *
+        -:   83: *         PURPOSE: writes the list of shape names in the collection
+        -:   84: *
+        -:   85: *         INPUT: out - the output stream to use
+        -:   86: *
+        -:   87: *         OUTPUT: out - the output stream has been written to
+        -:   88: *
+        -:   89: *********************************************************************/
+        -:   90:
+        -:   91:
+        -:   92:class Shape_Collection
+        -:   93:{
+        -:   94:public:
+        -:   95:   Shape_Collection ();
+        -:   96:   ~Shape_Collection ();
+        -:   97:
+        -:   98:   void add (Shape* shape, string name);
+        -:   99:   void remove (string name);
+        -:  100:
+        -:  101:   Shape* lookup (string name) const;
+        -:  102:
+        -:  103:   void draw_shapes (ostream& out) const;
+        -:  104:   void write_names (ostream& out) const;
+        -:  105:
+        -:  106:private:
+        -:  107:   struct Node
+       12:  108:   {
+        -:  109:      Node* next;
+        -:  110:      Node* prev;
+        -:  111:
+        -:  112:      Shape* shape;
+        -:  113:      string name;
+        -:  114:   };
+        -:  115:
+        -:  116:   Shape_Collection (const Shape_Collection& orig);
+        -:  117:   Shape_Collection& operator= (const Shape_Collection& rhs);
+        -:  118:
+        -:  119:   void remove_all ();
+        -:  120:   Node* lookup_node (string name) const;
+        -:  121:   Node* head;
+        -:  122:};
+        -:  123:
+        -:  124:
+        -:  125:#endif
