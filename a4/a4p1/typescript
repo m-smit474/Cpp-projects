@@ -1,0 +1,199 @@
+Script started on Tue 12 Mar 2019 09:52:52 PM MDT
+[msmit474@ins.mtroyal.ca ~/a4p1> ls -al
+total 148
+drwxr-xr-x 2 msmit474 students  4096 Mar 12 21:52 [0m[01;34m.[0m
+drwx--x--x 7 msmit474 students  4096 Mar 12 21:49 [01;34m..[0m
+-rw-r--r-- 1 msmit474 students  3852 Mar 12 21:51 a4p1.cpp
+-rw-r--r-- 1 msmit474 students    99 Mar 12 21:51 globals.h
+-rw-r--r-- 1 msmit474 students  2927 Mar 12 21:52 ignoreList.h
+-rw-r--r-- 1 msmit474 students 54512 Mar 12 21:52 ignoreList.o
+-rw-r--r-- 1 msmit474 students  1601 Mar 12 21:51 indexList.h
+-rw-r--r-- 1 msmit474 students 52648 Mar 12 21:51 indexList.o
+-rw-r--r-- 1 msmit474 students  3937 Mar 12 21:52 ioutil.cpp
+-rw-r--r-- 1 msmit474 students  4254 Mar 12 21:52 ioutil.h
+-rw-r--r-- 1 msmit474 students   235 Mar 12 21:51 makefile
+-rw-r--r-- 1 msmit474 students     0 Mar 12 21:52 typescript
+[m[msmit474@ins.mtroyal.ca ~/a4p1> make all
+/bin/rm -f a4p1.o a4p1 *.*~
+g++  -ansi -pedantic-errors -Wall -Wconversion  -c -o a4p1.o a4p1.cpp
+g++  -ansi -pedantic-errors -Wall -Wconversion  -c -o ioutil.o ioutil.cpp
+g++ a4p1.o indexList.o ignoreList.o ioutil.o -o a4p1
+[msmit474@ins.mtroyal.ca ~/a4p1> cat a4p1.cpp
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  4 
+  Due Date:    Tuesday, March 12, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: a4p1.cpp
+
+ ==============================================================================
+
+ */
+
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <iomanip>
+#include "ioutil.h"
+#include "globals.h"
+#include "indexList.h"
+#include "ignoreList.h"
+using namespace std;
+
+const int MAX_COUNT = 7;
+const int MIN_WORD_LENGTH = 3;
+
+void lowercaseWord (WORD aWord);
+// 1
+//void loadIgnoreList (ignorePtr &head, ifstream &ignoreFile);
+
+int main ()
+{
+  ifstream  bookFile, ignoreFile;
+  WORD      word, bookFileName, ignoreFileName;
+  bool      eof, success, outputIgnoreList;
+// 2
+//  ignorePtr ignoreHead = NULL;
+  ignoreList ignoreWords;
+// 3
+//  indexPtr  indexHead = NULL;
+  indexList indexWords;
+
+  do
+  {
+    readString ("Enter the name of the text file: ", bookFileName, 
+                WORD_MAX, 1, eof);
+    if(eof)
+    {
+      cout << "\n\tCtrl-d entered and ignored - to exit program type Ctrl-c\n";
+    }
+  } while (eof);
+
+  bookFile.open (bookFileName);
+  if (bookFile.fail())
+    cout << "Unable to open text file - processing terminated\n";
+  else
+  {
+    do
+    {
+      readString ("Enter the name of the words to ignore file: ", 
+                  ignoreFileName, WORD_MAX, 0, eof);
+      if(eof)
+      {
+        cout << "\n\tCtrl-d entered and ignored - to exit program type Ctrl-c\n";
+      }
+    } while (eof);
+    
+    if (static_cast<int> (strlen(ignoreFileName)) == 0)
+      cout << "No file name entered for ignore words" << endl;
+    else
+    {
+      ignoreFile.open(ignoreFileName);
+      if (ignoreFile.fail())
+        cout << "The ignore words file failed to open." << endl;
+      else
+      {
+// 4
+//        loadIgnoreList(ignoreHead, ignoreFile);
+	  ignoreWords.load(ignoreFile);
+// 5
+//        if (ignoreHead == NULL) 
+	  if(ignoreWords.size() == 0)
+          cout << "The ignore words file contained no words." << endl;
+     }
+    }
+
+    bookFile >> word;
+    if (bookFile.eof())
+    {
+      cout << "The text file is empty, so no index is produced" << endl;
+    }
+    else
+    {
+      while (!bookFile.eof())
+      {
+        lowercaseWord(word);
+        if (word[0] >= 'a' && word[0] <= 'z')
+        {
+          if (static_cast<int> (strlen(word)) > MIN_WORD_LENGTH)
+          {
+// 6
+//            if (!findInIgnoreList(ignoreHead, word))
+	      if(!ignoreWords.contains(word))
+            {
+// 7
+//              updateIndexList(indexHead, word, MAX_COUNT, success);
+		indexWords.update(word, MAX_COUNT, success);
+              if (!success)
+              {
+// 8
+//                insertInIgnoreList(ignoreHead, word, true);
+		  ignoreWords.insert(word, true); 
+              }
+            }
+          }
+        }
+        bookFile >> word;
+      }
+// 9
+//      writeIndexList (indexHead, cout);
+      indexWords.write(cout);
+    
+      do
+      {
+        outputIgnoreList = readBool("Print ignore list? (y/n): ", eof);
+        if(eof)
+        {
+          cout << "\n\tCtrl-d entered and ignored - to exit program type Ctrl-c\n";
+        }
+      } while (eof);
+
+      if (outputIgnoreList)
+      {
+// 10
+//        writeIgnoreList(ignoreHead, cout);
+	  ignoreWords.write(cout);
+      }
+    }
+// 11
+//    destroyIgnoreList(ignoreHead);
+
+// 12
+//    destroyIndexList(indexHead);
+  }
+  return 0;
+}
+
+void lowercaseWord (WORD aWord)
+{
+  int i, length;
+
+  length = static_cast <int> (strlen(aWord));
+  for (i = 0; i < length; i++)
+  {
+    aWord[i] = static_cast<char>(tolower(aWord[i]));
+  }
+}
+
+/*
+void loadIgnoreList (ignorePtr &head, ifstream &ignoreFile)
+{
+  WORD word;
+
+  ignoreFile >> word;
+  while (!ignoreFile.eof())
+  {
+    insertInIgnoreList(head, word, false);
+    ignoreFile >> word;
+  }
+  return;
+}
+*/
+[msmit474@ins.mtroyal.ca ~/a4p1> exit
+exit
+
+Script done on Tue 12 Mar 2019 09:53:38 PM MDT

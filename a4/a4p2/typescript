@@ -1,0 +1,1345 @@
+Script started on Wed 20 Mar 2019 11:42:17 PM MDT
+[msmit474@ins.mtroyal.ca ~/a4p2> ls -al
+total 64
+drwxr-xr-x 2 msmit474 students 4096 Mar 20 23:42 [0m[01;34m.[0m
+drwx--x--x 7 msmit474 students 4096 Mar 20 23:21 [01;34m..[0m
+-rw-r--r-- 1 msmit474 students 3965 Mar 20 23:23 a4p2.cpp
+-rw-r--r-- 1 msmit474 students 3061 Mar 20 23:25 book2.dat
+-rw-r--r-- 1 msmit474 students   99 Mar 20 23:24 globals.h
+-rw-r--r-- 1 msmit474 students  709 Mar 20 23:25 ignore1.dat
+-rw-r--r-- 1 msmit474 students 3388 Mar 20 23:24 ignoreList.cpp
+-rw-r--r-- 1 msmit474 students 3124 Mar 20 23:24 ignoreList.h
+-rw-r--r-- 1 msmit474 students 4440 Mar 20 23:24 indexList.cpp
+-rw-r--r-- 1 msmit474 students 2946 Mar 20 23:24 indexList.h
+-rw-r--r-- 1 msmit474 students 3937 Mar 20 23:24 ioutil.cpp
+-rw-r--r-- 1 msmit474 students 4254 Mar 20 23:24 ioutil.h
+-rw-r--r-- 1 msmit474 students 1283 Mar 20 23:22 makefile
+-rw-r--r-- 1 msmit474 students  996 Mar 20 23:24 test_indexList.cpp
+-rw-r--r-- 1 msmit474 students    0 Mar 20 23:42 typescript
+[m[msmit474@ins.mtroyal.ca ~/a4p2> cat makefile
+#  Name: Matthew Smith
+#  MRU E-mail:  msmit474@mtroyal.ca
+#  Course:      COMP 1633-001
+#  Assignment:  4 Part 2
+#  Due Date:    Wednesday, March 20, 2019 at 11:59 p.m.
+#  Instructor:  Paul Pospisil
+#
+#  Source File: makefile
+
+INDEX=indexList
+TESTING=test_indexList
+SOURCE=test_indexList
+MODULES=indexList.o ignoreList.o a4p2.o ioutil.o
+TESTMODULES=test_indexList.o indexList.o 
+CPPFLAGS=-ansi -pedantic-errors -Wall -Wconversion
+GCOV_COMP=-fprofile-arcs -ftest-coverage
+GCOV_LINK=-lgcov --coverage
+GTFLAGS=-lgtest -lpthread -lgtest_main
+
+$(INDEX): clean $(MODULES)
+	g++ $(CPPFLAGS) $(MODULES) -o $(INDEX)           
+
+$(TESTING): clean coverIndexList test_indexList.o
+	g++ $(GCOV_LINK) $(GTFLAGS) $(TESTMODULES) -o $(TESTING)
+	$(TESTING)
+	gcov $(INDEX).cpp 2> /dev/null | grep -A 1 $(INDEX).cpp
+
+clean:
+	/bin/rm -f *.o *.*~ *.g* $(TESTING) $(INDEX)
+
+all:	clean $(INDEX) $(TESTING)
+
+$(TESTING).o: $(TESTING).cpp
+	g++ $(CPPFLAGS) $(GTFLAGS)  -c $(TESTING).cpp
+
+coverIndexList: $(INDEX).cpp indexList.h
+	g++ $(CPPFLAGS) $(GTFLAGS) $(GCOV_COMP) -c $(INDEX).cpp
+
+indexList.o: $(INDEX).cpp
+	g++ $(CPPFLAGS) -c $(INDEX).cpp
+
+a4p2.o: a4p2.cpp
+	g++ $(CPPFLAGS) -c a4p2.cpp
+
+ignoreList.o: ignoreList.cpp
+	g++ $(CPPFLAGS) -c ignoreList.cpp
+
+ioutil.o: ioutil.cpp
+	g++ $(CPPFLAGS) -c ioutil.cpp
+[msmit474@ins.mtroyal.ca ~/a4p2> cat indexList.h
+#ifndef INDEX_LIST
+#define INDEX_LIST
+
+/*******************************************************************************
+ *
+ *  The "indexList" class: represents a list of words and word counts that is
+ *  stored in alphabetic order. Valid word counts will range between 1 and a
+ *  maximum value - 1, inclusive.
+ *
+ *  PUBLIC METHOD SPECIFICATION:
+ *
+ *     update:    takes a word and an integer specifying the maximum allowable
+ *                count.
+ *                If the word is not presently on the list it will be added in
+ *                alphabetic order.
+ *                If the word is already on the list, its count will be
+ *                incremented. If the incremented value is less than the specified
+ *                maximum count, the word is left on the list. If the incremented
+ *                word count exceeds the maximum count, the word is removed from
+ *                the list.
+ *                The function returns a success flag. The flag will be true if
+ *                the word remains on the list. The flag will be false if the
+ *                word was removed from the list.
+ *
+ *     write:     takes an output stream and writes the index list to it.
+ *                The format for each line in the output is:
+ *                    line number, word and word count
+ *
+ *     getWord    takes a position in the list, starting from 1.
+ *                if a word exists at this position in the list, then
+ *                the function returns the word at this position
+ *                the function returns another boolean value indicating whether
+ *                (true) or not (false) a word exists at the specified position.
+ *                If a false is returned for this value then the returned word
+ *                value is undefined.
+ *
+ *     getCount   takes a word and if this word is found on the index list its
+ *                count is returned.
+ *
+ *     size       returns the length of the index list, i.e. the total number
+ *                of words on the list.
+ *
+ *
+ ******************************************************************************/
+
+#include "globals.h"
+#include <iostream>
+using namespace std;
+
+class indexList
+{
+ public:
+  indexList();
+  ~indexList();
+
+  void update(const WORD aWord, int max_count, bool &success);
+  void write(ostream &os);
+// the following three functions are provided for testing purposes only
+  void getWord (int position, WORD aWord, bool &found) const;
+  int getCount (const WORD aWord) const;
+  int size() const;
+
+ private:
+  struct indexNode
+  {
+    indexNode *next;
+    indexNode *prev;
+    WORD word;                   // WORD type declared in global.h
+    int   count;
+  };
+  typedef indexNode *indexPtr;
+
+  void search (const WORD aWord, indexPtr &here, bool &found) const;
+
+  indexNode head, tail;         // Notice: actual NODES not pointers!!!
+
+  void alphaOrder (indexPtr &here, const WORD aWord) const;
+
+};
+
+
+#endif
+[msmit474@ins.mtroyal.ca ~/a4p2> cat indexList.cpp
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  4 Part 2
+  Due Date:    Wednesday, March 20, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: indexList.cpp
+
+ */
+/*
+ *  The indexList Private memebers: has a index node structure which consits
+ *  of 4 fields. the two node pointer next and prev, a word and the word count.
+ *  The index node struct will be used for the nodes in the link list.
+ *  There are static head and tail nodes that replace head and tail pointers.
+ *
+ *     search     takes a word
+ *                the index list is search for this word and if it is found, 
+ *                the boolean, found, parameter is set to true and the pointer,
+ *                here, is set to point to the node containing the word; 
+ *                otherwise if the word is not found, the found parameter is 
+ *                set to false and here is set to point to the node with the 
+ *                word that would follow the word being searched for, 
+ *                i.e. the word’s alphabetic successor.
+ *
+ *                Details:
+ *                Since the list can be traversed in either direction, this 
+ *                function will start searching from the head node for words 
+ *                that start with the letters ‘a’ through ‘m’; the search will
+ *                start from the tail node for words starting with the letters
+ *                'n' through 'z'.
+ *
+ *  alphaOrder    takes a pointer "here" and a word
+ *                traverses through the list and sets "here" to point to the node 
+ *                with the first word that comes after the target alphabetically.
+ *
+ */
+#include "indexList.h"
+#include <cstring>
+#include <iomanip>
+
+
+
+indexList :: indexList ()
+{
+    head.next = &tail;
+    tail.prev = &head;
+}
+
+indexList :: ~indexList ()
+{
+    indexPtr temp;
+
+    while(head.next != &tail)
+    {
+	temp = head.next;
+	head.next = head.next -> next;
+	delete temp;
+    }
+}
+
+void indexList :: update (const WORD aWord, int max_count, bool &success)
+{
+    indexPtr here,
+	temp;
+    bool found;
+
+    success = true;
+
+    search(aWord, here, found);
+
+    if(!found)
+    {
+	alphaOrder(here, aWord);           // Might be redundant
+
+	temp = new indexNode;
+	temp -> next = here;
+	temp -> prev = here -> prev;
+	here -> prev -> next = temp;
+	here -> prev = temp;
+    }
+    else
+    {
+	++(here -> count);
+
+	if(here -> count > max_count)
+	{
+	    success = false;
+
+	    here -> prev -> next = here -> next;
+	    here -> next -> prev = here -> prev;
+	    delete here;
+	}
+    }
+}
+
+void indexList :: write (ostream &os)
+{
+    int count = 1;
+    indexPtr temp = head.next;
+
+    while(temp != &tail)
+    {
+	os << setw(5) << left << count
+	   << setw(30) << left << temp -> word
+	   << left << temp -> count << endl;
+
+	temp = temp -> next;
+	++count;
+    }
+}
+
+void indexList :: getWord(int position, WORD aWord, bool &found) const
+{
+    int count = 1;
+    indexPtr temp = head.next;
+
+    found = false;
+
+    if(position > 0)
+    {
+	while(temp != &tail && count < position)
+	{
+	    ++count;
+	    
+	    temp = temp -> next;
+	}
+	
+	if(count == position && head.next != &tail)
+	{
+	    found = true;
+
+	    aWord = temp -> word;
+	}
+    }
+}
+
+int indexList :: getCount(const WORD aWord) const
+{
+    int count;
+    indexPtr here;
+    bool found = false;
+
+    search(aWord, here, found);
+
+    if(found)
+    {
+	count = here -> count;
+    }
+    else
+	count = 0;
+
+    return count;
+}
+
+int indexList :: size() const
+{
+    int counter = 0;
+    indexPtr temp;
+
+    temp = head.next;
+    while(temp != &tail)
+    {
+	++counter;
+	temp = temp -> next;
+    }
+
+    return counter;
+}
+
+void indexList :: search(const WORD aWord, indexPtr &here, bool &found) const
+{
+    here = head.next;
+    found = false;
+
+    while(here != &tail && here -> word[0] < 'n' && !found)
+    {
+	if(strncmp(here -> word, aWord, WORD_MAX) == 0)
+	    found = true;
+	else
+	    here = here -> next;
+    }
+    if(!found)
+    {
+	here = tail.prev;
+
+	while(here != &head && here -> word[0] > 'm' && !found)
+	{
+	    if(strncmp(here -> word, aWord, WORD_MAX) == 0)
+		found = true;
+	    else
+		here = here -> prev;
+	}
+    }
+
+    if(!found)
+    {
+	alphaOrder(here, aWord);
+    }
+}
+
+void indexList :: alphaOrder (indexPtr &here, const WORD aWord) const
+{
+    here = head.next;
+
+    while(here != &tail && strncmp(here -> word, aWord, WORD_MAX) < 0)
+    {
+	here = here -> next;
+    }
+
+}
+[msmit474@ins.mtroyal.ca ~/a4p2> cat ignoreList.h
+#ifndef IGNORE_LIST
+#define IGNORE_LIST
+
+/*******************************************************************************
+ *
+ *  The "ignoreList" class: represents a list of words that should not be
+ *  included on a book index. The list is ordered by how the words are
+ *  encountered.
+ *  The list is populated either from an initial file or from words that are
+ *  removed from the index list.
+ *
+ *  PUBLIC METHOD SPECIFICATION:
+ *
+ *     load:      takes an input stream and reads the contents of this stream
+ *                as words and inserts them into the ignore list
+ *
+ *     contains: takes a word and determines whether or not this word is on the
+ *               ignore list. The function returns true if the word is on the
+ *               list; otherwise, it returns false
+ *
+ *     insert:   takes a word and a boolean indicating the source of the word,
+ *               where false means the ignore word file and true means the text
+ *               file, and inserts this word at the end of the ignore list.
+ *
+ *     write:     takes an output stream and writes information about the ignore
+ *                list to it.
+ *                The format for each line in the output is:
+ *                   the first sentence states the count of words on the ignore
+ *                   list that were read from the ignore words file,
+ *                   if no words from the text were added to the ignore list a
+ *                   sentence stating this is to be printed;
+ *                   otherwise a list of only words that have been added to the
+ *                   ignore list from the text are printed one per line in a
+ *                   two-column table with each row consisting of the line number,
+ *                   starting from 1, and the word
+ *
+ *     getWord    takes a position in the list, starting from 1
+ *                if this position exists in the list, the function returns the
+ *                word at this position and the boolean value of source of this
+ *                word, with false being the initial ignore word file and true
+ *                being the text file being indexed.
+ *                The function returns another boolean value indicating whether
+ *                or not a word was found at the specified position. If this value
+ *                is false then the other two return values are undefined.
+ *
+ *     size       returns the length of the ignore list, i.e. the total number
+ *                of words on the list.
+ *
+ ******************************************************************************/
+
+#include "globals.h"
+#include <iostream>
+using namespace std;
+
+class ignoreList
+{
+ public:
+  ignoreList();
+  ~ignoreList();
+
+  void load(istream &in);
+  bool contains (const WORD aWord);
+  void insert(const WORD aWord, bool fromWhere);
+  void write(ostream &os);
+  void getWord (int position, WORD aWord, bool &fromWhere, bool &found);
+  int size();
+
+ private:
+  struct ignoreNode
+  {
+    WORD aWord;
+    bool fromText;
+  };
+
+  ignoreNode *ignoreWords;
+  int maxSize;
+  int fillLevel;
+
+  void newArray(ignoreNode* &temp);
+
+
+};
+
+
+#endif
+[msmit474@ins.mtroyal.ca ~/a4p2> cat ignoreList.cpp
+/*
+
+  Name: Matthew Smith
+  MRU E-mail:  msmit474@mtroyal.ca
+  Course:      COMP 1633-001
+  Assignment:  4 Part 2
+  Due Date:    Wednesday, March 20, 2019 at 11:59 p.m.
+  Instructor:  Paul Pospisil
+
+  Source File: ignoreList.cpp
+
+ */
+/*
+ *
+ *    newArray    takes a ignore node pointer
+ *                increments max size by 10 and creates a new array that is of
+ *                that size. Sets the given pointer to this new array
+ *                and returns the pointer 
+ *
+ */
+
+
+#include "ignoreList.h"
+#include <cstring>
+#include <iomanip>
+
+ignoreList :: ignoreList ()
+{
+    maxSize = 25;
+    fillLevel = 0;
+
+    ignoreWords = new ignoreNode [maxSize];
+}
+
+ignoreList :: ~ignoreList()
+{
+
+    delete [] ignoreWords;
+
+}
+
+void ignoreList :: load (istream &in)
+{
+    WORD word;
+    ignoreNode *temp;
+
+    in >> word;
+    while(!in.eof())
+    {
+	if(fillLevel < maxSize)
+	{
+	    strncpy(ignoreWords[fillLevel].aWord, word, WORD_MAX);
+	    ignoreWords[fillLevel].fromText = false;
+
+	    ++fillLevel;
+	}
+	else
+	{
+                                               
+	    newArray(temp);                    // Create new array with a size +10
+
+	    delete [] ignoreWords;
+
+	    ignoreWords = temp;
+
+	    strncpy(ignoreWords[fillLevel].aWord, word, WORD_MAX);
+	    ignoreWords[fillLevel].fromText = false;
+
+	    ++fillLevel;
+
+	}
+
+	in >> word;
+    }
+}
+
+bool ignoreList :: contains (const WORD aWord)
+{
+    bool found = false;
+    int index;
+
+    for(index = 0; index <= fillLevel; ++index)
+    {
+	if(aWord == ignoreWords[index].aWord)
+	    found = true;
+    }
+
+    return found;
+}
+
+void ignoreList :: insert (const WORD aWord, bool fromWhere)
+{
+    ignoreNode* temp;
+
+    if(fillLevel < maxSize)
+    {
+	++fillLevel;
+
+	strncpy(ignoreWords[fillLevel].aWord, aWord, WORD_MAX);
+	ignoreWords[fillLevel].fromText = fromWhere;
+    }
+    else
+    {
+// Create new array +10 size
+	newArray(temp);
+
+	delete [] ignoreWords;
+
+	ignoreWords = temp;
+
+	++fillLevel;
+
+	strncpy(ignoreWords[fillLevel].aWord, aWord, WORD_MAX);
+	ignoreWords[fillLevel].fromText = fromWhere;
+
+    }
+}
+
+void ignoreList :: write (ostream &os)
+{
+    int fileWordCount = 0,
+	lineCount = 1,
+	textWordCount,
+	index;
+
+    for(index = 0; index <= fillLevel; ++index)
+    {
+	if(ignoreWords[index].fromText == false)
+	    ++fileWordCount;
+    }
+
+    textWordCount = fillLevel - fileWordCount;
+
+
+    os << "There was " << fileWordCount << " word(s) read from the ignore file.\n";
+
+    if(textWordCount == 0)
+	os << "No words from the text were added to the ignore list\n";
+    else
+    {
+	for(index = 0; index <= fillLevel; ++index)
+	{
+	    if(ignoreWords[index].fromText == true)
+	    {
+		os << setw(5) << left << lineCount
+		   << setw(30) << left << ignoreWords[index].aWord
+		   << endl; 
+	    }
+	}
+    }
+
+}
+
+void ignoreList :: getWord (int position, WORD aWord, bool &fromWhere, bool &found)
+{
+    found = false;
+
+    if(position <= fillLevel)
+    {
+	found = true;
+
+	strncpy(aWord, ignoreWords[position].aWord, WORD_MAX);
+	fromWhere = ignoreWords[position].fromText;
+
+    }
+}
+
+int ignoreList :: size ()
+{
+
+    return fillLevel;
+}
+
+void ignoreList :: newArray(ignoreNode* &temp)
+{
+    int index;
+
+    maxSize += 10;
+
+    temp = new ignoreNode [maxSize];
+                                                   // Copy ignoreWords to new array
+    for(index = 0; index < fillLevel; ++index)
+    {
+	temp[index] = ignoreWords[index];
+    }
+    
+}   
+[msmit474@ins.mtroyal.ca ~/a4p2> cat test_indexList.cpp
+#include "indexList.h"
+#include <gtest/gtest.h>
+#include <fstream>
+
+class test_indexList : public testing :: Test {
+protected:
+
+    virtual void SetUp()
+    {
+    }
+
+    virtual void TearDown()
+    {
+    }
+
+    indexList index;
+
+};
+
+
+TEST_F(test_indexList, testDefaultConstructorCount)
+{
+    EXPECT_EQ(0, index.getCount("test\0") );
+}
+
+TEST_F(test_indexList, testDefaultConstructorSize)
+{
+// Might be 1
+    EXPECT_EQ(0 ,index.size() );
+}
+
+
+TEST_F(test_indexList, testSearch)
+{
+// 3 tests 
+// Word less than n, word greater than n, word not on list
+
+}
+
+
+TEST_F(test_indexList, testUpdateNewWord)
+{
+    bool success = false,
+	found = false;
+    WORD testWord = "Yo";
+
+    index.update(testWord, 7, success);
+    index.getWord(1, testWord, found);  
+
+    EXPECT_EQ(true, found);
+    EXPECT_EQ(true, success);
+}
+
+
+/*
+TEST_F(test_indexList, testWrite)
+{
+    ostream output;
+
+    index.write(output);
+
+// Will need to be changed based on output format
+//    EXPECT_EQ("1    Yo      1", output);
+
+}
+
+*/
+[msmit474@ins.mtroyal.ca ~/a4p2> make test_indexList
+/bin/rm -f *.o *.*~ *.g* test_indexList indexList
+g++ -ansi -pedantic-errors -Wall -Wconversion -lgtest -lpthread -lgtest_main -fprofile-arcs -ftest-coverage -c indexList.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -lgtest -lpthread -lgtest_main  -c test_indexList.cpp
+g++ -lgcov --coverage -lgtest -lpthread -lgtest_main test_indexList.o indexList.o  -o test_indexList
+test_indexList
+Running main() from gtest_main.cc
+[==========] Running 4 tests from 1 test case.
+[----------] Global test environment set-up.
+[----------] 4 tests from test_indexList
+[ RUN      ] test_indexList.testDefaultConstructorCount
+[       OK ] test_indexList.testDefaultConstructorCount (0 ms)
+[ RUN      ] test_indexList.testDefaultConstructorSize
+[       OK ] test_indexList.testDefaultConstructorSize (0 ms)
+[ RUN      ] test_indexList.testSearch
+[       OK ] test_indexList.testSearch (0 ms)
+[ RUN      ] test_indexList.testUpdateNewWord
+[       OK ] test_indexList.testUpdateNewWord (0 ms)
+[----------] 4 tests from test_indexList (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 4 tests from 1 test case ran. (0 ms total)
+[  PASSED  ] 4 tests.
+gcov indexList.cpp 2> /dev/null | grep -A 1 indexList.cpp
+File 'indexList.cpp'
+Lines executed:68.29% of 82
+indexList.cpp:creating 'indexList.cpp.gcov'
+
+[msmit474@ins.mtroyal.ca ~/a4p2> cat indexList.cpp.gcov
+        -:    0:Source:indexList.cpp
+        -:    0:Graph:indexList.gcno
+        -:    0:Data:indexList.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:/*
+        -:    2:
+        -:    3:  Name: Matthew Smith
+        -:    4:  MRU E-mail:  msmit474@mtroyal.ca
+        -:    5:  Course:      COMP 1633-001
+        -:    6:  Assignment:  4 Part 2
+        -:    7:  Due Date:    Wednesday, March 20, 2019 at 11:59 p.m.
+        -:    8:  Instructor:  Paul Pospisil
+        -:    9:
+        -:   10:  Source File: indexList.cpp
+        -:   11:
+        -:   12: */
+        -:   13:/*
+        -:   14: *  The indexList Private memebers: has a index node structure which consits
+        -:   15: *  of 4 fields. the two node pointer next and prev, a word and the word count.
+        -:   16: *  The index node struct will be used for the nodes in the link list.
+        -:   17: *  There are static head and tail nodes that replace head and tail pointers.
+        -:   18: *
+        -:   19: *     search     takes a word
+        -:   20: *                the index list is search for this word and if it is found, 
+        -:   21: *                the boolean, found, parameter is set to true and the pointer,
+        -:   22: *                here, is set to point to the node containing the word; 
+        -:   23: *                otherwise if the word is not found, the found parameter is 
+        -:   24: *                set to false and here is set to point to the node with the 
+        -:   25: *                word that would follow the word being searched for, 
+        -:   26: *                i.e. the word’s alphabetic successor.
+        -:   27: *
+        -:   28: *                Details:
+        -:   29: *                Since the list can be traversed in either direction, this 
+        -:   30: *                function will start searching from the head node for words 
+        -:   31: *                that start with the letters ‘a’ through ‘m’; the search will
+        -:   32: *                start from the tail node for words starting with the letters
+        -:   33: *                'n' through 'z'.
+        -:   34: *
+        -:   35: *  alphaOrder    takes a pointer "here" and a word
+        -:   36: *                traverses through the list and sets "here" to point to the node 
+        -:   37: *                with the first word that comes after the target alphabetically.
+        -:   38: *
+        -:   39: */
+        -:   40:#include "indexList.h"
+        -:   41:#include <cstring>
+        -:   42:#include <iomanip>
+        -:   43:
+        -:   44:
+        -:   45:
+        4:   46:indexList :: indexList ()
+        -:   47:{
+        4:   48:    head.next = &tail;
+        4:   49:    tail.prev = &head;
+        4:   50:}
+        -:   51:
+        4:   52:indexList :: ~indexList ()
+        -:   53:{
+        -:   54:    indexPtr temp;
+        -:   55:
+        9:   56:    while(head.next != &tail)
+        -:   57:    {
+        1:   58:	temp = head.next;
+        1:   59:	head.next = head.next -> next;
+        1:   60:	delete temp;
+        -:   61:    }
+        4:   62:}
+        -:   63:
+        1:   64:void indexList :: update (const WORD aWord, int max_count, bool &success)
+        -:   65:{
+        -:   66:    indexPtr here,
+        -:   67:	temp;
+        -:   68:    bool found;
+        -:   69:
+        1:   70:    success = true;
+        -:   71:
+        1:   72:    search(aWord, here, found);
+        -:   73:
+        1:   74:    if(!found)
+        -:   75:    {
+        1:   76:	alphaOrder(here, aWord);           // Might be redundant
+        -:   77:
+        1:   78:	temp = new indexNode;
+        1:   79:	temp -> next = here;
+        1:   80:	temp -> prev = here -> prev;
+        1:   81:	here -> prev -> next = temp;
+        1:   82:	here -> prev = temp;
+        -:   83:    }
+        -:   84:    else
+        -:   85:    {
+    #####:   86:	++(here -> count);
+        -:   87:
+    #####:   88:	if(here -> count > max_count)
+        -:   89:	{
+    #####:   90:	    success = false;
+        -:   91:
+    #####:   92:	    here -> prev -> next = here -> next;
+    #####:   93:	    here -> next -> prev = here -> prev;
+    #####:   94:	    delete here;
+        -:   95:	}
+        -:   96:    }
+        1:   97:}
+        -:   98:
+    #####:   99:void indexList :: write (ostream &os)
+        -:  100:{
+    #####:  101:    int count = 1;
+    #####:  102:    indexPtr temp = head.next;
+        -:  103:
+    #####:  104:    while(temp != &tail)
+        -:  105:    {
+        -:  106:	os << setw(5) << left << count
+        -:  107:	   << setw(30) << left << temp -> word
+    #####:  108:	   << left << temp -> count << endl;
+        -:  109:
+    #####:  110:	temp = temp -> next;
+    #####:  111:	++count;
+        -:  112:    }
+    #####:  113:}
+        -:  114:
+        1:  115:void indexList :: getWord(int position, WORD aWord, bool &found) const
+        -:  116:{
+        1:  117:    int count = 1;
+        1:  118:    indexPtr temp = head.next;
+        -:  119:
+        1:  120:    found = false;
+        -:  121:
+        1:  122:    if(position > 0)
+        -:  123:    {
+        2:  124:	while(temp != &tail && count < position)
+        -:  125:	{
+    #####:  126:	    ++count;
+        -:  127:	    
+    #####:  128:	    temp = temp -> next;
+        -:  129:	}
+        -:  130:	
+        1:  131:	if(count == position && head.next != &tail)
+        -:  132:	{
+        1:  133:	    found = true;
+        -:  134:
+        1:  135:	    aWord = temp -> word;
+        -:  136:	}
+        -:  137:    }
+        1:  138:}
+        -:  139:
+        1:  140:int indexList :: getCount(const WORD aWord) const
+        -:  141:{
+        -:  142:    int count;
+        -:  143:    indexPtr here;
+        1:  144:    bool found = false;
+        -:  145:
+        1:  146:    search(aWord, here, found);
+        -:  147:
+        1:  148:    if(found)
+        -:  149:    {
+    #####:  150:	count = here -> count;
+        -:  151:    }
+        -:  152:    else
+        1:  153:	count = 0;
+        -:  154:
+        1:  155:    return count;
+        -:  156:}
+        -:  157:
+        1:  158:int indexList :: size() const
+        -:  159:{
+        1:  160:    int counter = 0;
+        -:  161:    indexPtr temp;
+        -:  162:
+        1:  163:    temp = head.next;
+        2:  164:    while(temp != &tail)
+        -:  165:    {
+    #####:  166:	++counter;
+    #####:  167:	temp = temp -> next;
+        -:  168:    }
+        -:  169:
+        1:  170:    return counter;
+        -:  171:}
+        -:  172:
+        2:  173:void indexList :: search(const WORD aWord, indexPtr &here, bool &found) const
+        -:  174:{
+        2:  175:    here = head.next;
+        2:  176:    found = false;
+        -:  177:
+        4:  178:    while(here != &tail && here -> word[0] < 'n' && !found)
+        -:  179:    {
+    #####:  180:	if(strncmp(here -> word, aWord, WORD_MAX) == 0)
+    #####:  181:	    found = true;
+        -:  182:	else
+    #####:  183:	    here = here -> next;
+        -:  184:    }
+        2:  185:    if(!found)
+        -:  186:    {
+        2:  187:	here = tail.prev;
+        -:  188:
+        4:  189:	while(here != &head && here -> word[0] > 'm' && !found)
+        -:  190:	{
+    #####:  191:	    if(strncmp(here -> word, aWord, WORD_MAX) == 0)
+    #####:  192:		found = true;
+        -:  193:	    else
+    #####:  194:		here = here -> prev;
+        -:  195:	}
+        -:  196:    }
+        -:  197:
+        2:  198:    if(!found)
+        -:  199:    {
+        2:  200:	alphaOrder(here, aWord);
+        -:  201:    }
+        2:  202:}
+        -:  203:
+        3:  204:void indexList :: alphaOrder (indexPtr &here, const WORD aWord) const
+        -:  205:{
+        3:  206:    here = head.next;
+        -:  207:
+        6:  208:    while(here != &tail && strncmp(here -> word, aWord, WORD_MAX) < 0)
+        -:  209:    {
+    #####:  210:	here = here -> next;
+        -:  211:    }
+        -:  212:
+        6:  213:}
+[msmit474@ins.mtroyal.ca ~/a4p2> make indexList
+/bin/rm -f *.o *.*~ *.g* test_indexList indexList
+g++ -ansi -pedantic-errors -Wall -Wconversion -c indexList.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -c ignoreList.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -c a4p2.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion -c ioutil.cpp
+g++ -ansi -pedantic-errors -Wall -Wconversion indexList.o ignoreList.o a4p2.o ioutil.o -o indexList           
+[msmit474@ins.mtroyal.ca ~/a4p2> valgrind --tool=memcheck --leak-check=full indexList
+==28972== Memcheck, a memory error detector
+==28972== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==28972== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==28972== Command: indexList
+==28972== 
+Enter the name of the text file: book2.dat
+Enter the name of the words to ignore file: ignore1.dat
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x40155B: indexList::search(char const*, indexList::indexNode*&, bool&) const (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x4011E5: indexList::update(char const*, int, bool&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x402281: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x4A0841C: strncmp (mc_replace_strmem.c:551)
+==28972==    by 0x40151B: indexList::search(char const*, indexList::indexNode*&, bool&) const (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x4011E5: indexList::update(char const*, int, bool&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x402281: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x4015F9: indexList::search(char const*, indexList::indexNode*&, bool&) const (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x4011E5: indexList::update(char const*, int, bool&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x402281: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x4A0841C: strncmp (mc_replace_strmem.c:551)
+==28972==    by 0x4016A7: indexList::alphaOrder(indexList::indexNode*&, char const*) const (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x40163D: indexList::search(char const*, indexList::indexNode*&, bool&) const (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x4011E5: indexList::update(char const*, int, bool&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x402281: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x4A0841C: strncmp (mc_replace_strmem.c:551)
+==28972==    by 0x4016A7: indexList::alphaOrder(indexList::indexNode*&, char const*) const (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x401207: indexList::update(char const*, int, bool&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x402281: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x4A07F99: strlen (mc_replace_strmem.c:403)
+==28972==    by 0x3E89C92BA0: std::basic_ostream<char, std::char_traits<char> >& std::operator<< <std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*) (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x401344: indexList::write(std::ostream&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x4022F1: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x3E89C81B96: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x3E89C81E25: std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::do_put(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x3E89C9543D: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x40135B: indexList::write(std::ostream&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x4022F1: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+==28972== Use of uninitialised value of size 8
+==28972==    at 0x3E89C7D6B3: ??? (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x3E89C81BC2: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x3E89C81E25: std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::do_put(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x3E89C9543D: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x40135B: indexList::write(std::ostream&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x4022F1: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x3E89C7D6BE: ??? (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x3E89C81BC2: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x3E89C81E25: std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::do_put(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x3E89C9543D: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x40135B: indexList::write(std::ostream&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x4022F1: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x3E89C81BF8: std::ostreambuf_iterator<char, std::char_traits<char> > std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::_M_insert_int<long>(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x3E89C81E25: std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char> > >::do_put(std::ostreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, char, long) const (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x3E89C9543D: std::ostream& std::ostream::_M_insert<long>(long) (in /usr/lib64/libstdc++.so.6.0.13)
+==28972==    by 0x40135B: indexList::write(std::ostream&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x4022F1: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+1                                  0
+2                                  0
+3                                  0
+4                                  0
+5                                  0
+6                                  0
+7                                  0
+8                                  0
+9                                  0
+10                                 0
+11                                 0
+12                                 0
+13                                 0
+14                                 0
+15                                 0
+16                                 0
+17                                 0
+18                                 0
+19                                 0
+20                                 0
+21                                 0
+22                                 0
+23                                 0
+24                                 0
+25                                 0
+26                                 0
+27                                 0
+28                                 0
+29                                 0
+30                                 0
+31                                 0
+32                                 0
+33                                 0
+34                                 0
+35                                 0
+36                                 0
+37                                 0
+38                                 0
+39                                 0
+40                                 0
+41                                 0
+42                                 0
+43                                 0
+44                                 0
+45                                 0
+46                                 0
+47                                 0
+48                                 0
+49                                 0
+50                                 0
+51                                 0
+52                                 0
+53                                 0
+54                                 0
+55                                 0
+56                                 0
+57                                 0
+58                                 0
+59                                 0
+60                                 0
+61                                 0
+62                                 0
+63                                 0
+64                                 0
+65                                 0
+66                                 0
+67                                 0
+68                                 0
+69                                 0
+70                                 0
+71                                 0
+72                                 0
+73                                 0
+74                                 0
+75                                 0
+76                                 0
+77                                 0
+78                                 0
+79                                 0
+80                                 0
+81                                 0
+82                                 0
+83                                 0
+84                                 0
+85                                 0
+86                                 0
+87                                 0
+88                                 0
+89                                 0
+90                                 0
+91                                 0
+92                                 0
+93                                 0
+94                                 0
+95                                 0
+96                                 0
+97                                 0
+98                                 0
+99                                 0
+100                                0
+101                                0
+102                                0
+103                                0
+104                                0
+105                                0
+106                                0
+107                                0
+108                                0
+109                                0
+110                                0
+111                                0
+112                                0
+113                                0
+114                                0
+115                                0
+116                                0
+117                                0
+118                                0
+119                                0
+120                                0
+121                                0
+122                                0
+123                                0
+124                                0
+125                                0
+126                                0
+127                                0
+128                                0
+129                                0
+130                                0
+131                                0
+132                                0
+133                                0
+134                                0
+135                                0
+136                                0
+137                                0
+138                                0
+139                                0
+140                                0
+141                                0
+142                                0
+143                                0
+144                                0
+145                                0
+146                                0
+147                                0
+148                                0
+149                                0
+150                                0
+151                                0
+152                                0
+153                                0
+154                                0
+155                                0
+156                                0
+157                                0
+158                                0
+159                                0
+160                                0
+161                                0
+162                                0
+163                                0
+164                                0
+165                                0
+166                                0
+167                                0
+168                                0
+169                                0
+170                                0
+171                                0
+172                                0
+173                                0
+174                                0
+175                                0
+176                                0
+177                                0
+178                                0
+179                                0
+180                                0
+181                                0
+182                                0
+183                                0
+184                                0
+185                                0
+186                                0
+187                                0
+188                                0
+189                                0
+190                                0
+191                                0
+192                                0
+193                                0
+194                                0
+195                                0
+196                                0
+197                                0
+198                                0
+199                                0
+200                                0
+201                                0
+202                                0
+203                                0
+204                                0
+205                                0
+206                                0
+207                                0
+208                                0
+209                                0
+210                                0
+211                                0
+212                                0
+213                                0
+214                                0
+215                                0
+216                                0
+217                                0
+218                                0
+219                                0
+220                                0
+221                                0
+222                                0
+223                                0
+224                                0
+225                                0
+226                                0
+227                                0
+228                                0
+229                                0
+230                                0
+231                                0
+232                                0
+233                                0
+234                                0
+235                                0
+236                                0
+237                                0
+238                                0
+239                                0
+240                                0
+241                                0
+242                                0
+243                                0
+244                                0
+245                                0
+246                                0
+247                                0
+248                                0
+249                                0
+250                                0
+251                                0
+252                                0
+253                                0
+254                                0
+255                                0
+256                                0
+257                                0
+258                                0
+259                                0
+260                                0
+261                                0
+262                                0
+263                                0
+264                                0
+265                                0
+266                                0
+267                                0
+268                                0
+269                                0
+270                                0
+271                                0
+272                                0
+273                                0
+274                                0
+275                                0
+276                                0
+277                                0
+278                                0
+279                                0
+280                                0
+281                                0
+282                                0
+283                                0
+284                                0
+285                                0
+286                                0
+287                                0
+Print ignore list? (y/n): y
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x401C7F: ignoreList::write(std::ostream&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x40233E: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+There was 95 word(s) read from the ignore file.
+==28972== Conditional jump or move depends on uninitialised value(s)
+==28972==    at 0x401D24: ignoreList::write(std::ostream&) (in /users/msmit474/a4p2/indexList)
+==28972==    by 0x40233E: main (in /users/msmit474/a4p2/indexList)
+==28972== 
+==28972== 
+==28972== HEAP SUMMARY:
+==28972==     in use at exit: 0 bytes in 0 blocks
+==28972==   total heap usage: 299 allocs, 299 frees, 43,776 bytes allocated
+==28972== 
+==28972== All heap blocks were freed -- no leaks are possible
+==28972== 
+==28972== For counts of detected and suppressed errors, rerun with: -v
+==28972== Use --track-origins=yes to see where uninitialised values come from
+==28972== ERROR SUMMARY: 165887 errors from 12 contexts (suppressed: 8 from 6)
+[msmit474@ins.mtroyal.ca ~/a4p2> exit
+exit
+
+Script done on Wed 20 Mar 2019 11:46:43 PM MDT

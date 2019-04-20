@@ -1,0 +1,54 @@
+		    Using the FAT32 File System
+
+When you save files your computer uses a file system to control how your files and folders are stored on your hard disk  Earlier versions of MSDOS and Windows use the FAT16 file system exclusively  Windows 98 uses FAT16 by default but you have the option of using FAT32 an enhanced file system that can improve disk performance and increase available disk space 
+  
+Understanding How Information Is Stored
+
+When you save a file or install a program your computer stores the information
+on your hard disk in small areas called clusters  The smaller the cluster size
+you use the more efficiently your disk stores information  Cluster size depends
+on the size of your partition and partition size depends on the file system
+you use  By default most computers use just one partition   
+
+For information about dividing your disk into partitions consult the Windows 98 Resource Kit 
+    
+The table below illustrates the larger partition size and smaller cluster size available through the FAT32 file system  Partitions larger than 2 gigabyte are not supported with FAT16 and partitions smaller than 512 MB are not supported with FAT32 
+
+Partition size		FAT16 cluster size		FAT32 cluster size  
+32 MB            	2 KB             		NA 
+128 MB 	        	2 KB				NA 
+256 MB 		        4 KB 				NA 
+512 MB 	        	8 KB 				4 KB 
+1 GB             	16 KB 				4 KB 
+2 GB 			32 KB 				4 KB 
+3 GB to 7 GB 		NA 				4 KB 
+8 GB to 16 GB 		NA 				8 KB 
+16 GB to 32 GB		NA				16 KB 
+Larger than 32 GB 	NA 				32 KB 
+
+where
+        KB      means kilobytes
+        MB      means megabytes
+        GB      means gigabytes
+        TB      means terabytes
+
+If your hard disk is smaller than 2 GB and your computer uses the FAT16 file system you may not see much improvement if you convert to FAT32    But you may want to convert to FAT32 if your hard disk is between 2 GB and 2 TB and you want to improve its efficiency 
+
+The FAT32 file system has the following advantages over FAT16
+
+  It allows programs to open more quickly up to 50% faster  
+It uses a smaller cluster size resulting in more efficient use of disk space up to 15% more efficient  
+It allows a hard disk of up to 2 TB to be formatted as a single drive eliminating the need to partition the hard disk   
+It can relocate the root directory and use backup copies of the FAT making your computer less vulnerable to crashes 
+
+Converting to FAT32
+You can use the FAT32 conversion tool to easily convert your hard disk to the FAT32 file system  However before you convert file systems you should read the following information carefully
+
+If you did not make a Windows 98 Startup Disk  you should create one by following the steps in the Using the Startup Disk section earlier in this chapter before you convert to FAT32 
+
+
+You should not convert any drives on which you also want to run an operating system that does not support FAT32 
+
+This fun assignment brought to you by Mount Royal College and especially by
+the  ever keen and vigilant Instructor who spent hours making up test data
+
